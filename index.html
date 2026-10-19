@@ -6,27 +6,53 @@
   <title>Direct Manipulation Matrix Sorter</title>
   <!-- Separate presentation and behavior from page structure. -->
   <link rel="stylesheet" href="styles.css">
-  <script src="matrix.js" defer></script>
+  <script src="script.js" defer></script>
 </head>
 <body>
   <main>
     <h1>30 × 40 Direct-Manipulation Matrix Sorter</h1>
     <!-- Text instructions only: no buttons, menus, or other widgets. -->
-    <p class="instructions" id="instructions">
-      Start dragging on a number and release to sort.
-      Drag <strong>right →</strong> to sort its row ascending,
-      <strong>left ←</strong> to sort its row descending,
-      <strong>down ↓</strong> to sort its column ascending,
-      or <strong>up ↑</strong> to sort its column descending.
-      Drag <strong>diagonally down-right ↘</strong> to sort both axes ascending
-      or <strong>up-left ↖</strong> to sort both axes descending.
-    </p>
+    <section class="instructions" id="instructions" aria-label="Sorting instructions">
+      <p>Start dragging on any number and release to sort:</p>
+      <ol>
+        <li>Drag <strong>right →</strong> to sort the selected row in ascending order.</li>
+        <li>Drag <strong>left ←</strong> to sort the selected row in descending order.</li>
+        <li>Drag <strong>down ↓</strong> to sort the selected column in ascending order.</li>
+        <li>Drag <strong>up ↑</strong> to sort the selected column in descending order.</li>
+        <li>Drag <strong>diagonally down-right ↘</strong> to sort both axes in ascending order.</li>
+        <li>Drag <strong>diagonally up-left ↖</strong> to sort both axes in descending order.</li>
+      </ol>
+      <p class="gesture-note">
+        Begin each gesture on a number, drag at least a short distance, and release.
+        Ascending means smallest to largest; descending means largest to smallest.
+        Row sorting changes only the selected row, column sorting changes only the
+        selected column, and diagonal sorting orders the full matrix along both axes.
+      </p>
+    </section>
     <!-- The JavaScript generates all 1,200 numerical cells. -->
     <div class="matrix-scroll">
       <div id="matrix" class="matrix" role="grid" aria-rowcount="30"
            aria-colcount="40" aria-describedby="instructions"
            aria-label="Sortable numerical matrix"></div>
     </div>
+    <!-- Academic references support the interaction design, not copied source code. -->
+    <section class="references" aria-label="References">
+      <h2>References</h2>
+      <p>
+        Shneiderman, B. (1983). Direct manipulation: A step beyond programming
+        languages. <em>Computer, 16</em>(8), 57–69.
+      </p>
+      <p>
+        Hutchins, E. L., Hollan, J. D., &amp; Norman, D. A. (1985).
+        Direct manipulation interfaces. <em>Human–Computer Interaction,
+        1</em>(4), 311–338.
+      </p>
+      <p>
+        Implementation note: The matrix sorter is an original implementation
+        using standard HTML, CSS, and JavaScript; it is not adapted from an
+        existing codebase.
+      </p>
+    </section>
   </main>
 </body>
 </html>
