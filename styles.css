@@ -1,46 +1,116 @@
+/* General page layout and typography. */
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
+  margin: 0;
+  padding: 18px;
+  background: #f5f7fa;
+  color: #182435;
+}
+
+main {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 7px;
+  font-size: 1.35rem;
 }
 
 .instructions {
-  margin-bottom: 15px;
+  margin: 0 0 14px;
+  font-size: 0.91rem;
+  line-height: 1.55;
 }
 
+.instructions p {
+  margin: 0 0 5px;
+}
+
+.instructions ol {
+  margin: 0;
+  padding-left: 24px;
+}
+
+.instructions li {
+  margin-bottom: 3px;
+}
+
+.instructions strong {
+  color: #184a79;
+}
+
+/* Scrolling allows all 40 columns to fit on smaller displays. */
 .matrix-scroll {
+  max-height: calc(100vh - 150px);
   overflow: auto;
-  max-height: 70vh;
+  border: 1px solid #aebccd;
+  background: white;
 }
 
+/* A fixed 40-column grid; JavaScript creates 30 rows. */
 .matrix {
   display: grid;
-  grid-template-columns: repeat(40, 45px);
+  grid-template-columns: repeat(40, minmax(45px, 1fr));
   width: max-content;
+  min-width: 100%;
   user-select: none;
   touch-action: none;
 }
 
+/* Cells are the only sorting interaction targets. */
 .cell {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 30px;
-  border: 1px solid #ddd;
+  min-height: 31px;
+  border-right: 1px solid #e1e6ec;
+  border-bottom: 1px solid #e1e6ec;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   cursor: grab;
 }
 
-/* Highlight the rectangular region being selected. */
-.cell.selected {
-  background-color: #dceeff;
+.cell:nth-child(even) {
+  background: #f8fafc;
 }
 
-/* Highlight the cell where dragging begins. */
+/* Show the cells affected by the current gesture. */
+.cell.selected {
+  background: #dceeff;
+  box-shadow: inset 0 0 0 1px #8ab9e3;
+}
+
+/* Make the drag starting cell easy to identify. */
 .cell.active {
-  background-color: #a9d4ff;
+  background: #cce7ff;
+  outline: 2px solid #276ca4;
+  outline-offset: -2px;
+  cursor: grabbing;
+}
+
+/* Explanatory text and citations are not interactive controls. */
+.gesture-note {
+  margin-top: 8px !important;
 }
 
 .references {
-  margin-top: 20px;
-  font-size: 12px;
+  margin-top: 16px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #435367;
+}
+
+.references h2 {
+  margin: 0 0 5px;
+  font-size: 0.95rem;
+}
+
+.references p {
+  margin: 0 0 5px;
 }
