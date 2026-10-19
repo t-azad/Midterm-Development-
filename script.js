@@ -1,5 +1,3 @@
-"use strict";
-
 /* Keep a computed cell index within the matrix boundaries. */
 function clamp(value, minimum, maximum) {
   return Math.max(minimum, Math.min(maximum, value));

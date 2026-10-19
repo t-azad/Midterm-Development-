@@ -1,5 +1,3 @@
-"use strict";
-
 /**
  * Direct-manipulation sorter for a 30 × 40 numerical matrix.
  * Dragging across cells selects a row, column, or rectangular region.
