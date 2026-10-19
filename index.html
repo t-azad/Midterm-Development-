@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Direct Manipulation Matrix Sorter</title>
+  <!-- Separate presentation and behavior from page structure. -->
+  <link rel="stylesheet" href="styles.css">
+  <script src="matrix.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>30 × 40 Direct-Manipulation Matrix Sorter</h1>
+    <!-- Text instructions only: no buttons, menus, or other widgets. -->
+    <p class="instructions" id="instructions">
+      Start dragging on a number and release to sort.
+      Drag <strong>right →</strong> to sort its row ascending,
+      <strong>left ←</strong> to sort its row descending,
+      <strong>down ↓</strong> to sort its column ascending,
+      or <strong>up ↑</strong> to sort its column descending.
+      Drag <strong>diagonally down-right ↘</strong> to sort both axes ascending
+      or <strong>up-left ↖</strong> to sort both axes descending.
+    </p>
+    <!-- The JavaScript generates all 1,200 numerical cells. -->
+    <div class="matrix-scroll">
+      <div id="matrix" class="matrix" role="grid" aria-rowcount="30"
+           aria-colcount="40" aria-describedby="instructions"
+           aria-label="Sortable numerical matrix"></div>
+    </div>
+  </main>
+</body>
+</html>

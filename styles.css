@@ -1,0 +1,76 @@
+/* General page layout and typography. */
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  padding: 18px;
+  background: #f5f7fa;
+  color: #182435;
+}
+
+main {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 7px;
+  font-size: 1.35rem;
+}
+
+.instructions {
+  margin: 0 0 14px;
+  font-size: 0.91rem;
+  line-height: 1.55;
+}
+
+.instructions strong {
+  color: #184a79;
+}
+
+/* Scrolling allows all 40 columns to fit on smaller displays. */
+.matrix-scroll {
+  max-height: calc(100vh - 150px);
+  overflow: auto;
+  border: 1px solid #aebccd;
+  background: white;
+}
+
+/* A fixed 40-column grid; JavaScript creates 30 rows. */
+.matrix {
+  display: grid;
+  grid-template-columns: repeat(40, minmax(45px, 1fr));
+  width: max-content;
+  min-width: 100%;
+  user-select: none;
+  touch-action: none;
+}
+
+/* Cells are the only sorting interaction targets. */
+.cell {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 31px;
+  border-right: 1px solid #e1e6ec;
+  border-bottom: 1px solid #e1e6ec;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: grab;
+}
+
+.cell:nth-child(even) {
+  background: #f8fafc;
+}
+
+/* Highlight the number where a drag begins. */
+.cell.active {
+  background: #cce7ff;
+  outline: 2px solid #276ca4;
+  outline-offset: -2px;
+  cursor: grabbing;
+}
