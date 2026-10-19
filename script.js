@@ -170,24 +170,33 @@ function getGestureType(drag, endCell, clientX, clientY) {
   return horizontalDistance >= verticalDistance ? "row" : "column";
 }
 
-/** Preview exactly the cells that the current gesture will sort. */
-function updateSelection(drag, endCell, gestureType)
-{
-  let selected = false;
+/** Highlight the row, column, or rectangle affected by the drag. */
+function updateSelection(drag, endCell, gestureType) {
+  const topRow = Math.min(drag.startRow, endCell.row);
+  const bottomRow = Math.max(drag.startRow, endCell.row);
+  const leftColumn = Math.min(drag.startColumn, endCell.column);
+  const rightColumn = Math.max(drag.startColumn, endCell.column);
 
-  if (gestureType === "row") {
-    selected = rowIndex === drag.startRow;
-  } else if (gestureType === "column") {
-    selected = columnIndex === drag.startColumn;
-  } else {
-    selected =
-      rowIndex >= topRow &&
-      rowIndex <= bottomRow &&
-      columnIndex >= leftColumn &&
-      columnIndex <= rightColumn;
-  }
+  matrixElement.querySelectorAll(".cell").forEach((cellElement) => {
+    const rowIndex = Number(cellElement.dataset.row);
+    const columnIndex = Number(cellElement.dataset.column);
 
-  cellElement.classList.toggle("selected", selected);
+    let selected;
+
+    if (gestureType === "row") {
+      selected = rowIndex === drag.startRow;
+    } else if (gestureType === "column") {
+      selected = columnIndex === drag.startColumn;
+    } else {
+      selected =
+        rowIndex >= topRow &&
+        rowIndex <= bottomRow &&
+        columnIndex >= leftColumn &&
+        columnIndex <= rightColumn;
+    }
+
+    cellElement.classList.toggle("selected", selected);
+  });
 }
 
 /** Remove drag styling without changing any values. */
