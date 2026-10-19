@@ -65,6 +65,8 @@ function updateSelection(drag, endCell, gestureType) {
     }
 
     cellElement.classList.toggle("selected", selected);
+    cellElement.style.backgroundColor = cellElement.classList.contains("active")
+      ? "#a9d4ff" : selected ? "#dceeff" : "";
   });
 }
 
@@ -72,6 +74,7 @@ function updateSelection(drag, endCell, gestureType) {
 function clearSelection() {
   matrixElement.querySelectorAll(".selected, .active").forEach((cellElement) => {
     cellElement.classList.remove("selected", "active");
+    cellElement.style.backgroundColor = "";
   });
 }
 
@@ -93,6 +96,7 @@ matrixElement.addEventListener("pointerdown", (event) => {
 
   matrixElement.setPointerCapture(event.pointerId);
   cellElement.classList.add("active");
+  cellElement.style.backgroundColor = "#a9d4ff";
   event.preventDefault();
 });
 
