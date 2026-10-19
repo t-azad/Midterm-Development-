@@ -3,7 +3,6 @@
 /**
  * Direct-manipulation sorter for a 30 × 40 numerical matrix.
  * Dragging across cells selects a row, column, or rectangular region.
- * No buttons, dropdowns, or other interface widgets are required.
  */
 
 const ROW_COUNT = 30;
@@ -17,7 +16,7 @@ const matrixElement = document.getElementById("matrix");
 let matrixValues = createMatrix();
 let activeDrag = null;
 
-/** Generate the same 1,200 integers (0–999) on every page load. */
+/* Generate the 1,200 numbers (0–999) on every page load. */
 function createMatrix() 
 {
   let randomSeed = RANDOM_SEED;
@@ -34,8 +33,9 @@ function createMatrix()
   );
 }
 
-/** Draw the matrix using exactly one DOM element per numerical value. */
-function renderMatrix() {
+/* Draw the matrix using exactly one DOM element per numerical value. */
+function renderMatrix() 
+{
   const fragment = document.createDocumentFragment();
 
   matrixValues.forEach((rowValues, rowIndex) => {
@@ -55,13 +55,13 @@ function renderMatrix() {
   matrixElement.replaceChildren(fragment);
 }
 
-/** Compare numbers without lexicographic (string) sorting. */
+/* Compare numbers without lexicographic (string) sorting. */
 function compareNumbers(first, second, ascending) 
 {
   return ascending ? first - second : second - first;
 }
 
-/** Sort all numbers in the indicated row. */
+/* Sort all numbers in the indicated row. */
 function sortRow(rowIndex, ascending) 
 {
   matrixValues[rowIndex].sort((first, second) =>
@@ -69,7 +69,7 @@ function sortRow(rowIndex, ascending)
   );
 }
 
-/** Sort all numbers in the indicated column. */
+/* Sort all numbers in the indicated column. */
 function sortColumn(columnIndex, ascending) 
 {
   const columnValues = matrixValues.map((row) => row[columnIndex]);
@@ -87,7 +87,6 @@ function sortColumn(columnIndex, ascending)
  * Sort only the rectangle bounded by the starting and ending cells.
  * First sort each selected row, then each selected column. Column sorting
  * preserves the row ordering, so both axes are sorted after these passes.
- * Cells outside the rectangle are never modified.
  */
 function sortRectangle(startRow, endRow, startColumn, endColumn, ascending) 
 {
