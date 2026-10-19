@@ -8,7 +8,7 @@
 
 const ROW_COUNT = 30;
 const COLUMN_COUNT = 40;
-const RANDOM_SEED = 7;
+const RANDOM_SEED = 20261016;
 const MIN_DRAG_PIXELS = 12;
 const DIAGONAL_RATIO = 0.35;
 
@@ -18,13 +18,12 @@ let matrixValues = createMatrix();
 let activeDrag = null;
 
 /** Generate the same 1,200 integers (0–999) on every page load. */
-function createMatrix() 
-{
+function createMatrix() {
   let randomSeed = RANDOM_SEED;
 
   function nextRandom() {
-    randomSeed = (17 * randomSeed + 43) % 1009;
-    return randomSeed / 1009;
+    randomSeed = (1664525 * randomSeed + 1013904223) >>> 0;
+    return randomSeed / 4294967296;
   }
 
   return Array.from({ length: ROW_COUNT }, () =>
@@ -56,22 +55,19 @@ function renderMatrix() {
 }
 
 /** Compare numbers without lexicographic (string) sorting. */
-function compareNumbers(first, second, ascending) 
-{
+function compareNumbers(first, second, ascending) {
   return ascending ? first - second : second - first;
 }
 
 /** Sort all numbers in the indicated row. */
-function sortRow(rowIndex, ascending) 
-{
+function sortRow(rowIndex, ascending) {
   matrixValues[rowIndex].sort((first, second) =>
     compareNumbers(first, second, ascending)
   );
 }
 
 /** Sort all numbers in the indicated column. */
-function sortColumn(columnIndex, ascending) 
-{
+function sortColumn(columnIndex, ascending) {
   const columnValues = matrixValues.map((row) => row[columnIndex]);
 
   columnValues.sort((first, second) =>
@@ -89,16 +85,14 @@ function sortColumn(columnIndex, ascending)
  * preserves the row ordering, so both axes are sorted after these passes.
  * Cells outside the rectangle are never modified.
  */
-function sortRectangle(startRow, endRow, startColumn, endColumn, ascending) 
-{
+function sortRectangle(startRow, endRow, startColumn, endColumn, ascending) {
   const topRow = Math.min(startRow, endRow);
   const bottomRow = Math.max(startRow, endRow);
   const leftColumn = Math.min(startColumn, endColumn);
   const rightColumn = Math.max(startColumn, endColumn);
 
   // Sort the selected values within each row.
-  for (let rowIndex = topRow; rowIndex <= bottomRow; rowIndex += 1) 
-  {
+  for (let rowIndex = topRow; rowIndex <= bottomRow; rowIndex += 1) {
     const sortedValues = matrixValues[rowIndex]
       .slice(leftColumn, rightColumn + 1)
       .sort((first, second) => compareNumbers(first, second, ascending));
@@ -109,8 +103,7 @@ function sortRectangle(startRow, endRow, startColumn, endColumn, ascending)
   }
 
   // Sort the selected values within each column.
-  for (let columnIndex = leftColumn; columnIndex <= rightColumn; columnIndex += 1) 
-  {
+  for (let columnIndex = leftColumn; columnIndex <= rightColumn; columnIndex += 1) {
     const columnValues = [];
 
     for (let rowIndex = topRow; rowIndex <= bottomRow; rowIndex += 1) {
@@ -171,23 +164,25 @@ function getGestureType(drag, endCell, clientX, clientY) {
 }
 
 /** Preview exactly the cells that the current gesture will sort. */
-function updateSelection(drag, endCell, gestureType)
-{
-  let selected = false;
+function updateSelection(drag, endCell, gestureType) {
+  const topRow = Math.min(drag.startRow, endCell.row);
+  const bottomRow = Math.max(drag.startRow, endCell.row);
+  const leftColumn = Math.min(drag.startColumn, endCell.column);
+  const rightColumn = Math.max(drag.startColumn, endCell.column);
 
-  if (gestureType === "row") {
-    selected = rowIndex === drag.startRow;
-  } else if (gestureType === "column") {
-    selected = columnIndex === drag.startColumn;
-  } else {
-    selected =
-      rowIndex >= topRow &&
-      rowIndex <= bottomRow &&
-      columnIndex >= leftColumn &&
-      columnIndex <= rightColumn;
-  }
+  matrixElement.querySelectorAll(".cell").forEach((cellElement) => {
+    const rowIndex = Number(cellElement.dataset.row);
+    const columnIndex = Number(cellElement.dataset.column);
 
-  cellElement.classList.toggle("selected", selected);
+    const selected = gestureType === "row"
+      ? rowIndex === drag.startRow
+      : gestureType === "column"
+        ? columnIndex === drag.startColumn
+        : rowIndex >= topRow && rowIndex <= bottomRow
+          && columnIndex >= leftColumn && columnIndex <= rightColumn;
+
+    cellElement.classList.toggle("selected", selected);
+  });
 }
 
 /** Remove drag styling without changing any values. */
