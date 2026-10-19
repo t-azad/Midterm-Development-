@@ -80,7 +80,13 @@ h1 {
   background: #f8fafc;
 }
 
-/* Highlight the number where a drag begins. */
+/* Show the cells affected by the current gesture. */
+.cell.selected {
+  background: #dceeff;
+  box-shadow: inset 0 0 0 1px #8ab9e3;
+}
+
+/* Make the drag starting cell easy to identify. */
 .cell.active {
   background: #cce7ff;
   outline: 2px solid #276ca4;

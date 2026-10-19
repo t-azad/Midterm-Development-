@@ -1,31 +1,29 @@
 "use strict";
 
 /**
- * Matrix sorter: users drag directly on cells to sort numerical values.
- * No separate sorting buttons, menus, or other widgets are used.
+ * Direct-manipulation sorter for a 30 × 40 numerical matrix.
+ * Dragging across cells selects a row, column, or rectangular region.
+ * No buttons, dropdowns, or other interface widgets are required.
  */
 
-// Configuration constants.
 const ROW_COUNT = 30;
 const COLUMN_COUNT = 40;
-const MIN_DRAG_PIXELS = 24;
-const DIAGONAL_RATIO = 0.55;
 const RANDOM_SEED = 20261016;
+const MIN_DRAG_PIXELS = 12;
+const DIAGONAL_RATIO = 0.35;
 
 const matrixElement = document.getElementById("matrix");
+
 let matrixValues = createMatrix();
 let activeDrag = null;
 
-/**
- * Generate reproducible integers in the range 0–999.
- * The seed ensures the initial matrix is identical on every page load.
- */
+/** Generate the same 1,200 integers (0–999) on every page load. */
 function createMatrix() {
-  let seed = RANDOM_SEED;
+  let randomSeed = RANDOM_SEED;
 
   function nextRandom() {
-    seed = (1664525 * seed + 1013904223) >>> 0;
-    return seed / 4294967296;
+    randomSeed = (1664525 * randomSeed + 1013904223) >>> 0;
+    return randomSeed / 4294967296;
   }
 
   return Array.from({ length: ROW_COUNT }, () =>
@@ -35,40 +33,40 @@ function createMatrix() {
   );
 }
 
-/** Render exactly 30 × 40 cells using a single document fragment. */
+/** Draw the matrix using exactly one DOM element per numerical value. */
 function renderMatrix() {
   const fragment = document.createDocumentFragment();
 
   matrixValues.forEach((rowValues, rowIndex) => {
     rowValues.forEach((value, columnIndex) => {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.setAttribute("role", "gridcell");
-      cell.setAttribute("aria-rowindex", String(rowIndex + 1));
-      cell.setAttribute("aria-colindex", String(columnIndex + 1));
-      cell.dataset.row = String(rowIndex);
-      cell.dataset.column = String(columnIndex);
-      cell.textContent = String(value);
-      fragment.appendChild(cell);
+      const cellElement = document.createElement("div");
+      cellElement.className = "cell";
+      cellElement.setAttribute("role", "gridcell");
+      cellElement.setAttribute("aria-rowindex", String(rowIndex + 1));
+      cellElement.setAttribute("aria-colindex", String(columnIndex + 1));
+      cellElement.dataset.row = String(rowIndex);
+      cellElement.dataset.column = String(columnIndex);
+      cellElement.textContent = String(value);
+      fragment.appendChild(cellElement);
     });
   });
 
   matrixElement.replaceChildren(fragment);
 }
 
-/** Numeric comparator used for both ascending and descending sorting. */
+/** Compare numbers without lexicographic (string) sorting. */
 function compareNumbers(first, second, ascending) {
   return ascending ? first - second : second - first;
 }
 
-/** Sort one row without changing values in other rows. */
+/** Sort all numbers in the indicated row. */
 function sortRow(rowIndex, ascending) {
   matrixValues[rowIndex].sort((first, second) =>
     compareNumbers(first, second, ascending)
   );
 }
 
-/** Sort one column without changing values in other columns. */
+/** Sort all numbers in the indicated column. */
 function sortColumn(columnIndex, ascending) {
   const columnValues = matrixValues.map((row) => row[columnIndex]);
 
@@ -82,68 +80,123 @@ function sortColumn(columnIndex, ascending) {
 }
 
 /**
- * Sort every row, then every column.
- * Sorting the columns preserves row ordering because corresponding
- * order statistics of already ordered neighboring columns stay ordered.
+ * Sort only the rectangle bounded by the starting and ending cells.
+ * First sort each selected row, then each selected column. Column sorting
+ * preserves the row ordering, so both axes are sorted after these passes.
+ * Cells outside the rectangle are never modified.
  */
-function sortBothAxes(ascending) {
-  for (let rowIndex = 0; rowIndex < ROW_COUNT; rowIndex += 1) {
-    sortRow(rowIndex, ascending);
+function sortRectangle(startRow, endRow, startColumn, endColumn, ascending) {
+  const topRow = Math.min(startRow, endRow);
+  const bottomRow = Math.max(startRow, endRow);
+  const leftColumn = Math.min(startColumn, endColumn);
+  const rightColumn = Math.max(startColumn, endColumn);
+
+  // Sort the selected values within each row.
+  for (let rowIndex = topRow; rowIndex <= bottomRow; rowIndex += 1) {
+    const sortedValues = matrixValues[rowIndex]
+      .slice(leftColumn, rightColumn + 1)
+      .sort((first, second) => compareNumbers(first, second, ascending));
+
+    sortedValues.forEach((value, offset) => {
+      matrixValues[rowIndex][leftColumn + offset] = value;
+    });
   }
 
-  for (let columnIndex = 0; columnIndex < COLUMN_COUNT; columnIndex += 1) {
-    sortColumn(columnIndex, ascending);
+  // Sort the selected values within each column.
+  for (let columnIndex = leftColumn; columnIndex <= rightColumn; columnIndex += 1) {
+    const columnValues = [];
+
+    for (let rowIndex = topRow; rowIndex <= bottomRow; rowIndex += 1) {
+      columnValues.push(matrixValues[rowIndex][columnIndex]);
+    }
+
+    columnValues.sort((first, second) =>
+      compareNumbers(first, second, ascending)
+    );
+
+    columnValues.forEach((value, offset) => {
+      matrixValues[topRow + offset][columnIndex] = value;
+    });
   }
+}
+
+/** Keep a computed cell index within the matrix boundaries. */
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, value));
 }
 
 /**
- * Convert drag direction into a sorting operation.
- * Horizontal gestures sort the selected row; vertical gestures sort
- * the selected column; down-right and up-left sort both axes.
- * Other diagonal gestures use their dominant direction.
+ * Find the matrix cell underneath the pointer.
+ * Using coordinates rather than event.target works with pointer capture,
+ * including when the pointer is dragged outside the visible matrix.
  */
-function applySortingGesture(deltaX, deltaY, rowIndex, columnIndex) {
-  const horizontalDistance = Math.abs(deltaX);
-  const verticalDistance = Math.abs(deltaY);
-  const totalDistance = Math.hypot(deltaX, deltaY);
+function cellAtPointer(clientX, clientY) {
+  const bounds = matrixElement.getBoundingClientRect();
+  const cellWidth = bounds.width / COLUMN_COUNT;
+  const cellHeight = bounds.height / ROW_COUNT;
 
-  // Ignore accidental clicks or very short drags.
-  if (totalDistance < MIN_DRAG_PIXELS) {
-    return;
-  }
-
-  const smallerDistance = Math.min(horizontalDistance, verticalDistance);
-  const largerDistance = Math.max(horizontalDistance, verticalDistance);
-  const isDiagonal = smallerDistance / largerDistance >= DIAGONAL_RATIO;
-
-  if (isDiagonal && deltaX > 0 && deltaY > 0) {
-    sortBothAxes(true);
-  } else if (isDiagonal && deltaX < 0 && deltaY < 0) {
-    sortBothAxes(false);
-  } else if (horizontalDistance >= verticalDistance) {
-    sortRow(rowIndex, deltaX > 0);
-  } else {
-    sortColumn(columnIndex, deltaY > 0);
-  }
-
-  // Show the sorted matrix immediately.
-  renderMatrix();
+  return {
+    row: clamp(Math.floor((clientY - bounds.top) / cellHeight), 0, ROW_COUNT - 1),
+    column: clamp(Math.floor((clientX - bounds.left) / cellWidth), 0, COLUMN_COUNT - 1)
+  };
 }
 
-/** Remove the highlight if a drag is canceled or finishes without sorting. */
-function clearDragHighlight() {
-  const highlightedCell = matrixElement.querySelector(".cell.active");
+/**
+ * Classify the gesture by direction.
+ * Near-horizontal and near-vertical movements select a full row/column.
+ * Other movements that cross both axes select a rectangle.
+ */
+function getGestureType(drag, endCell, clientX, clientY) {
+  const horizontalDistance = Math.abs(clientX - drag.startX);
+  const verticalDistance = Math.abs(clientY - drag.startY);
+  const movedRows = endCell.row !== drag.startRow;
+  const movedColumns = endCell.column !== drag.startColumn;
+  const maxDistance = Math.max(horizontalDistance, verticalDistance);
+  const diagonalRatio = maxDistance === 0
+    ? 0
+    : Math.min(horizontalDistance, verticalDistance) / maxDistance;
 
-  if (highlightedCell) {
-    highlightedCell.classList.remove("active");
+  if (movedRows && movedColumns && diagonalRatio >= DIAGONAL_RATIO) {
+    return "rectangle";
   }
+
+  return horizontalDistance >= verticalDistance ? "row" : "column";
 }
 
-/** Record the selected cell and starting position of the pointer. */
+/** Preview exactly the cells that the current gesture will sort. */
+function updateSelection(drag, endCell, gestureType) {
+  const topRow = Math.min(drag.startRow, endCell.row);
+  const bottomRow = Math.max(drag.startRow, endCell.row);
+  const leftColumn = Math.min(drag.startColumn, endCell.column);
+  const rightColumn = Math.max(drag.startColumn, endCell.column);
+
+  matrixElement.querySelectorAll(".cell").forEach((cellElement) => {
+    const rowIndex = Number(cellElement.dataset.row);
+    const columnIndex = Number(cellElement.dataset.column);
+
+    const selected = gestureType === "row"
+      ? rowIndex === drag.startRow
+      : gestureType === "column"
+        ? columnIndex === drag.startColumn
+        : rowIndex >= topRow && rowIndex <= bottomRow
+          && columnIndex >= leftColumn && columnIndex <= rightColumn;
+
+    cellElement.classList.toggle("selected", selected);
+  });
+}
+
+/** Remove drag styling without changing any values. */
+function clearSelection() {
+  matrixElement.querySelectorAll(".selected, .active").forEach((cellElement) => {
+    cellElement.classList.remove("selected", "active");
+  });
+}
+
+/** Start dragging on a numerical cell. */
 matrixElement.addEventListener("pointerdown", (event) => {
-  const cell = event.target.closest(".cell");
+  const cellElement = event.target.closest(".cell");
 
-  if (!cell || event.button !== 0 || activeDrag !== null) {
+  if (!cellElement || event.button !== 0 || activeDrag !== null) {
     return;
   }
 
@@ -151,41 +204,77 @@ matrixElement.addEventListener("pointerdown", (event) => {
     pointerId: event.pointerId,
     startX: event.clientX,
     startY: event.clientY,
-    rowIndex: Number(cell.dataset.row),
-    columnIndex: Number(cell.dataset.column)
+    startRow: Number(cellElement.dataset.row),
+    startColumn: Number(cellElement.dataset.column)
   };
 
   matrixElement.setPointerCapture(event.pointerId);
-  cell.classList.add("active");
+  cellElement.classList.add("active");
   event.preventDefault();
 });
 
-/** Complete the drag and apply the appropriate sorting operation. */
+/** Show the affected row, column, or rectangle during the drag. */
+matrixElement.addEventListener("pointermove", (event) => {
+  if (!activeDrag || event.pointerId !== activeDrag.pointerId) {
+    return;
+  }
+
+  const endCell = cellAtPointer(event.clientX, event.clientY);
+  const gestureType = getGestureType(
+    activeDrag,
+    endCell,
+    event.clientX,
+    event.clientY
+  );
+
+  updateSelection(activeDrag, endCell, gestureType);
+});
+
+/** Apply the sort when the pointer is released. */
 matrixElement.addEventListener("pointerup", (event) => {
   if (!activeDrag || event.pointerId !== activeDrag.pointerId) {
     return;
   }
 
-  const { startX, startY, rowIndex, columnIndex } = activeDrag;
+  const drag = activeDrag;
   activeDrag = null;
 
-  applySortingGesture(
-    event.clientX - startX,
-    event.clientY - startY,
-    rowIndex,
-    columnIndex
-  );
+  const deltaX = event.clientX - drag.startX;
+  const deltaY = event.clientY - drag.startY;
 
-  clearDragHighlight();
+  if (Math.hypot(deltaX, deltaY) < MIN_DRAG_PIXELS) {
+    clearSelection();
+    return;
+  }
+
+  const endCell = cellAtPointer(event.clientX, event.clientY);
+  const gestureType = getGestureType(drag, endCell, event.clientX, event.clientY);
+
+  if (gestureType === "rectangle") {
+    // Downward diagonals sort ascending; upward diagonals sort descending.
+    sortRectangle(
+      drag.startRow,
+      endCell.row,
+      drag.startColumn,
+      endCell.column,
+      deltaY > 0
+    );
+  } else if (gestureType === "row") {
+    sortRow(drag.startRow, deltaX > 0);
+  } else {
+    sortColumn(drag.startColumn, deltaY > 0);
+  }
+
+  renderMatrix();
 });
 
-/** Abandon interrupted gestures without changing any numbers. */
+/** Canceled pointer gestures must not modify the matrix. */
 matrixElement.addEventListener("pointercancel", (event) => {
   if (activeDrag && event.pointerId === activeDrag.pointerId) {
     activeDrag = null;
-    clearDragHighlight();
+    clearSelection();
   }
 });
 
-// Display the original 1,200 numerical values when the page loads.
+// Initial display: 30 rows and 40 columns, totaling 1,200 values.
 renderMatrix();
