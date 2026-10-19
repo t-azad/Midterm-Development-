@@ -14,27 +14,25 @@
     <h1>Direct-Manipulation Matrix</h1>
     <!-- Text instructions only: no buttons, menus, or other widgets. -->
     <section class="instructions" id="instructions" aria-label="Sorting instructions">
-      <p>Start dragging on any number and release to sort:</p>
+      <p>Specific ways to sort using drag action:</p>
       <ol>
-        <li>Drag <strong>right →</strong> to sort the selected row in ascending order.</li>
-        <li>Drag <strong>left ←</strong> to sort the selected row in descending order.</li>
-        <li>Drag <strong>down ↓</strong> to sort the selected column in ascending order.</li>
-        <li>Drag <strong>up ↑</strong> to sort the selected column in descending order.</li>
-        <li>Drag <strong>diagonally down-right ↘</strong> to sort only the selected rectangle along both axes in ascending order.</li>
-        <li>Drag <strong>diagonally up-left ↖</strong> to sort only the selected rectangle along both axes in descending order.</li>
+        <li>Drag <strong>right →</strong> to sort a row in ascending order.</li>
+        <li>Drag <strong>left ←</strong> to sort a row in descending order.</li>
+        <li>Drag <strong>down ↓</strong> to sort a column in ascending order.</li>
+        <li>Drag <strong>up ↑</strong> to sort a column in descending order.</li>
+        <li>Drag <strong>diagonally down-right ↘</strong> to sort only the highlighted cells along both axes in ascending order.</li>
+        <li>Drag <strong>diagonally up-left ↖</strong> to sort only the highlighted cells along both axes in descending order.</li>
       </ol>
       <p class="gesture-note">
-        Start on any number and drag to sort. Horizontal gestures sort a row, vertical gestures sort a column, and diagonal gestures
-        sort the highlighted rectangular area. To sort the entire matrix, drag diagonally between opposite corners.
+        Start on any cell and drag based on the specific sorting you intend. Dragging horizontal sorts a row, while Dragging vertical sorts a column, and diagonal dragging
+        sorts both the row and column highlighted in an area. To sort the entire matrix, drag diagonally between opposite corners.
       </p>
     </section>
-    <!-- The JavaScript generates all 1,200 numerical cells. -->
     <div class="matrix-scroll">
       <div id="matrix" class="matrix" role="grid" aria-rowcount="30"
            aria-colcount="40" aria-describedby="instructions"
            aria-label="Sortable numerical matrix"></div>
     </div>
-    <!-- Academic references support the interaction design, not copied source code. -->
     <section class="references" aria-label="References">
     </section>
   </main>
